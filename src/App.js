@@ -1,10 +1,9 @@
 import {
-    BrowserRouter,
+    Navigate,
     NavLink,
-    Redirect,
-    Route,
-    Switch,
-    useParams
+    Outlet,
+    useParams,
+    useRoutes
 } from "react-router-dom";
 
 const HomePage = () => {
@@ -54,7 +53,9 @@ const UsersListPage = () => {
             <ul>
                 {users.map(el => (
                     <li key={el}>
-                        <NavLink to={"/users/" + el}>User {el}</NavLink>
+                        <NavLink to={"/users/" + el + "/profile"}>
+                            User {el}
+                        </NavLink>
                     </li>
                 ))}
             </ul>
@@ -62,29 +63,50 @@ const UsersListPage = () => {
     );
 };
 
-const UsersRouting = () => {
-    return (
-        <Switch>
-            <Route path="/users/:userId/profile" component={UserProfilePage} />
-            <Route path="/users/:userId/edit" component={UserEditingPage} />
-            <Route path="/users" exact component={UsersListPage} />
-            <Redirect from="/users/:userId" to="/users/:userId/profile" />
-        </Switch>
-    );
-};
-
 function App() {
-    return (
-        <div className="App">
-            <BrowserRouter>
-                <Switch>
-                    <Route path="/" exact component={HomePage} />
-                    <Route path="/users" component={UsersRouting} />
-                    <Redirect to="/" />
-                </Switch>
-            </BrowserRouter>
-        </div>
-    );
+    const elements = useRoutes([
+        {
+            path: "",
+            element: <HomePage />
+        },
+        {
+            path: "users",
+            element: <Outlet />,
+            children: [
+                {
+                    path: "",
+                    element: <UsersListPage />
+                },
+                {
+                    path: ":userId",
+                    element: <Outlet />,
+                    children: [
+                        {
+                            path: "profile",
+                            element: <UserProfilePage />
+                        },
+                        {
+                            path: "edit",
+                            element: <UserEditingPage />
+                        },
+                        {
+                            path: "",
+                            element: <Navigate to="profile" />
+                        },
+                        {
+                            path: "*",
+                            element: <Navigate to="../profile" />
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            path: "*",
+            element: <Navigate to="/" />
+        }
+    ]);
+    return <div className="App">{elements}</div>;
 }
 
 export default App;
